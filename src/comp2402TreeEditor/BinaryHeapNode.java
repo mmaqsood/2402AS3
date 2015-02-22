@@ -20,6 +20,45 @@ import java.io.*;
 public class BinaryHeapNode extends BTreeNode implements BTreeNodeADT{
 	//This class represents a node in a Binary Heap
 	
+	/*
+	 *	Returns wheter the current node is one of the following:
+	 *	- Left Child
+	 *	- Right Child
+	 *	- Right Most Child
+	 */
+	public String determineType(){
+		// TODO: Implement rightMost ability
+		BinaryHeapNode rightMostNode = null;
+		BinaryHeapNode parent = (BinaryHeapNode) this.parent();
+		
+		if (parent.leftChild() == this){
+			return "left";
+		}
+		else if (parent.rightChild() == this){
+			if (this.isRightmostNode()){
+				return "right-most";
+			}
+			else {
+				return "right";
+			}
+		}
+		return null;
+	}
+	
+	private boolean isRightmostNode(){
+		boolean isRightmostNode = false;
+		// Traverse through the tree 
+		BinaryHeapNode currentNode = this;
+		
+		while (currentNode.parent() != null){
+			// Check if this is a right child
+			isRightmostNode = ((BinaryHeapNode) currentNode.parent()).rightChild() == currentNode;
+			// Move up
+			currentNode = (BinaryHeapNode) currentNode.parent();
+		}
+		return isRightmostNode;
+		
+	}
 
 	// CONSTRUCTORS ========================================================
 	public BinaryHeapNode() {

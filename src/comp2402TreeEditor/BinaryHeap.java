@@ -23,7 +23,8 @@ public class BinaryHeap extends BTree implements BTreeADT{
     //This class represents a binary heap
 	
 	private BinaryHeapNode lastNode = null;
-    
+    private BinaryHeapNode rightMostNode = null;
+
 	//CONSTRUCTORS==================================================================
 	public BinaryHeap() {
     }
@@ -54,8 +55,8 @@ public class BinaryHeap extends BTree implements BTreeADT{
 
     //BTreeADT inteface methods =========================================================
      public void insert(String dataString){
-    	
-    	/*A binary heap tree inserts nodes based on the key value such that for any internal
+    
+       	/*A binary heap tree inserts nodes based on the key value such that for any internal
     	 * node it's key value is smaller, or a at least no bigger, then those of its two children
     	 * This heap condition is recursively true for any internal node.
     	
@@ -65,19 +66,79 @@ public class BinaryHeap extends BTree implements BTreeADT{
     	
    	    //System.out.println("BSTree::insert(String)");
     	Data data = new Data(dataString);
-    	
-    	//TO DO: Replace this code with your code to implement the heap
-    	boolean DoThisForNow = true;
-    	if(DoThisForNow){
-    		super.insert(dataString);
-    		return;
+    	BinaryHeapNode nodeToAdd = new BinaryHeapNode(data);
+
+    	if (!this.isEmpty() && lastNode != this.getRoot()){
+    		BinaryHeapNode parent = (BinaryHeapNode) lastNode.parent();
+    		// Determine which method to follow 
+    		String type = lastNode.determineType();
+    		
+    		if (type == "left"){
+    			// Add node to right of this node's parent.
+    			parent.setRightChild(nodeToAdd);
+    			nodeToAdd.setParent(parent);
+    			lastNode = nodeToAdd;
+        		// In case we have violated the order, restore.
+    			restoreOrderUpheap();
+    		}
+    		else if (type == "right"){
+    			// Find the leftmost node in the tree
+    			BinaryHeapNode leftmostNode = this.getLeftmostNode();
+    			// Add node to left of this node.
+    			leftmostNode.setLeftChild(nodeToAdd);
+    			nodeToAdd.setParent(leftmostNode);
+    			lastNode = nodeToAdd;
+        		// In case we have violated the order, restore.
+    			restoreOrderUpheap();
+    			
+    		}
+    		else if (type == "right-most"){
+    			
+    			BinaryHeapNode currentNode = (BinaryHeapNode) lastNode.parent();
+    			
+    			// Find the node to insert left-under
+    			boolean moveUpwardsInTree = true;
+    			while (currentNode.leftChild() != null){
+    				// Switch the direction if we've hit the root.
+    				if (currentNode.isRoot()){
+    					moveUpwardsInTree = false;
+    				}
+    				
+    				// Move in the tree depending on the flag
+    				if (moveUpwardsInTree){
+    					currentNode = (BinaryHeapNode) currentNode.parent();
+    				}
+    				else {
+    					currentNode = (BinaryHeapNode) currentNode.leftChild();
+    				}
+    			}
+    			// Add node to left of this node.
+    			currentNode.setLeftChild(nodeToAdd);
+    			nodeToAdd.setParent(currentNode);
+    			lastNode = nodeToAdd;
+        		// In case we have violated the order, restore.
+    			restoreOrderUpheap();
+    		}
+    		
     	}
-   	
-    	//TO DO Implement insertion into a Binary Heap
-    	//Must be O(log(n)) time at most for heap of n nodes
-    	
-    	
-    	
+    	else if (this.isEmpty()){
+    		// This is the first node being added to the tree.
+    		this.setRoot(nodeToAdd);
+    		lastNode = nodeToAdd;
+    	}
+    	else{
+    		// This is the second node being added to the tree
+    		// Add node immediately to left of the root
+    		lastNode.setLeftChild(nodeToAdd);
+    		nodeToAdd.setParent(lastNode);
+    		lastNode = nodeToAdd;
+    		// In case we have violated the order, restore.
+    		restoreOrderUpheap();
+    	}
+
+        // Once node is created to insert
+        // if node.parent.leftChild == null
+        //      rightMostChild = node;
     }
     
     public void remove(String aKeyString){
@@ -156,6 +217,94 @@ public class BinaryHeap extends BTree implements BTreeADT{
     //must get a chance to restore itself. The TreeADT remove method should be used
     //to delete nodes
       return false;
+    }
+
+    //Helper functions
+    
+    private BinaryHeapNode getLeftmostNode(){
+    	// 1. Travel up until a node that has no left child OR the Root is reached
+		// 2. Travel to the immediate right child.
+		// 3. Travel down left until a leaf is reached.
+		BinaryHeapNode leftmostNode = null;
+		BinaryHeapNode currentNode = (BinaryHeapNode) lastNode.parent();
+		
+		String direction = "up";
+		while (leftmostNode == null){
+			// Exit condition
+			if (direction == "down" && currentNode.isLeaf()){
+				leftmostNode = currentNode;
+			}
+			// Switching direction if need be.
+			if (currentNode.leftChild() == null || currentNode == this.getRoot()){
+				// Switch direction, moving right
+				direction = "right";
+			}
+			
+			// Determining direction to move current nod ein.
+			if (direction == "up"){
+				currentNode = (BinaryHeapNode) currentNode.parent();
+			}
+			else if (direction == "right"){
+				// Move immediately to the right child
+				currentNode = (BinaryHeapNode) currentNode.rightChild();
+				// Switch direction, moving downwards
+				direction = "down";
+			}
+			else if (direction == "down"){
+				currentNode = (BinaryHeapNode) currentNode.leftChild();
+			}
+		}
+		
+		return leftmostNode;
+    }
+    
+    /*
+     *  Function restores the order of a Heap via Upheap.
+     *
+     *  Keep going up and swapping value with parent until
+     *  a node is hit that has a lower value than newNode.
+     */
+    private void restoreOrderUpheap(){
+    	BinaryHeapNode currentNode = (BinaryHeapNode) lastNode;
+        BinaryHeapNode parentNode;
+        Data parentData;
+        
+        boolean restoredOrder = false;
+        
+        while (restoredOrder == false){
+        	if (currentNode.parent() != null){
+	        	// Compare the node we just added to the current node in iteration
+	        	int comparisonResult = currentNode.getData().compare(currentNode.parent().getData());
+	        	
+	        	if (comparisonResult < 0){
+	        		// Reference to the parent
+	        		parentNode = (BinaryHeapNode) currentNode.parent();
+	        		// Reference to the parent data
+	        		parentData = (Data) parentNode.getData();
+	        		// Swap values
+	        		parentNode.setData(currentNode.getData());
+	        		currentNode.setData(parentData);
+	        		// Change node
+	        		currentNode = parentNode;
+	        	}
+		    	else if (comparisonResult >= 0){
+		    		// > 0: The value we have added is a bigger value than it's parent
+		    		// = 0: The value we have added is the same value as it's parent
+		    		restoredOrder = true;
+		    	}
+        	}
+        	else {
+        		restoredOrder = true;
+        	}
+        }
+    }
+    /*
+     *  Function restores the order of a Heap via Downheap.
+     *
+     *  
+     */
+    private void restoreOrderDownheap(BinaryHeapNode newNode){
+
     }
 
 }

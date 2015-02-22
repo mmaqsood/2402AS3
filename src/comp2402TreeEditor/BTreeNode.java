@@ -68,27 +68,41 @@ public class BTreeNode extends TreeNode implements BTreeNodeADT{
 		return children;
 	}
 
+	// Attempt to add to left first
+	// if left is full, add to right
+	// 
 	public void insertNode(TreeNode aNode){
 	//          ==========
 		//This insert method of a Binary Tree attempts to keep the
 		//tree balanced, although the nodes are not put in any meaningful
 		//order
 		
+		// Make sure we're a BTreeNode
 		if(!(aNode instanceof BTreeNode)) return;
+
+		//inserting into left first if availble
 		if(leftChild == null){
 			leftChild = (BTreeNode) aNode;
 			aNode.setParent(this);
 			aNode.setLocation(this.getLocation());
 		}
+		//otherwise inserting right if available
 		else if(rightChild == null){
 			rightChild = (BTreeNode) aNode;
 			aNode.setParent(this);
 			aNode.setLocation(this.getLocation());
 		}
+		//otherwise determining where to insert depending on side
+		//has the less height
 		else{
+			// Determine which to insert into, 
+			// this is the attempting balancing that we do
 			int leftSubtreeHeight = leftChild.height();
 			int rightSubtreeHeight = rightChild.height();
+
+			// If the left has less children than the right, add to left so we dont over burden 1 side
 			if(leftSubtreeHeight < rightSubtreeHeight) leftChild.insertNode(aNode);
+			// Right has less nodes, so add to that one
 			else rightChild.insertNode(aNode);
 		}
 	}
