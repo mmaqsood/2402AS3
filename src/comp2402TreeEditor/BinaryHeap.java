@@ -222,7 +222,7 @@ public class BinaryHeap extends BTree implements BTreeADT{
     //Helper functions
     
     private BinaryHeapNode getLeftmostNode(){
-    	// 1. Travel up until a node that has no left child OR the Root is reached
+    	// 1. Travel up until a node is a left child OR the Root is reached
 		// 2. Travel to the immediate right child.
 		// 3. Travel down left until a leaf is reached.
 		BinaryHeapNode leftmostNode = null;
@@ -235,7 +235,12 @@ public class BinaryHeap extends BTree implements BTreeADT{
 				leftmostNode = currentNode;
 			}
 			// Switching direction if need be.
-			if (currentNode.leftChild() == null || currentNode == this.getRoot()){
+			if (currentNode.parent() != null && ((BTreeNode) currentNode.parent()).leftChild() == currentNode){
+				currentNode = (BinaryHeapNode) currentNode.parent();
+				// Switch direction, moving right
+				direction = "right";
+			}
+			if (currentNode == this.getRoot()){
 				// Switch direction, moving right
 				direction = "right";
 			}
