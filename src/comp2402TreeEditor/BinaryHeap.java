@@ -182,7 +182,7 @@ public class BinaryHeap extends BTree implements BTreeADT{
     		// 4. Update the last node
     		lastNode = newLastNode;
     		// 5. Restore heap order via downheap.
-    		this.restoreOrderDownheap();
+    		this.restoreOrderDownheap((BinaryHeapNode) this.root());
     		System.out.println(lastNode.value());
     	}
     	else if (nodeToRemove.isLeaf()){
@@ -200,9 +200,18 @@ public class BinaryHeap extends BTree implements BTreeADT{
     		// Check for complete tree, switching right/left if need be
     	}
     	else {
-    		// Node has children
     		// Node is the root
-    		this.removeSubTreeRoot(nodeToRemove);
+    		// 1. Identify new last node
+    		BinaryHeapNode newLastNode = getNewLastNode();
+    		// 2. Replace the root of this sub-tree's key with the key of the lastnode 
+    		nodeToRemove.setData(lastNode.getData());
+    		// 3. Remove node
+    		lastNode.getParent().removeChildNode(lastNode);
+    		// 4. Update the last node
+    		lastNode = newLastNode;
+    		// 5. Restore heap order via downheap.
+    		this.restoreOrderDownheap(nodeToRemove);
+    		System.out.println(lastNode.value());
     	}
     	//remove the nodeToRemove from the heap and restore heap property
     	//by bubbling bigger key values down.
@@ -220,35 +229,6 @@ public class BinaryHeap extends BTree implements BTreeADT{
  
     
     //===================================================================================
-    
-   
-	private void removeSubTreeRoot(BinaryHeapNode nodeToRemove) {
-		// Not a leaf, so traverse through it's children and 
-		// keep switching
-		if (!nodeToRemove.isLeaf()){
-			Data parentData = (Data) nodeToRemove.getData();
-    		BinaryHeapNode smallestChild = this.getSmallestChild(nodeToRemove);
-    		
-    		// Switch
-    		nodeToRemove.setData(smallestChild.getData());		
-    		smallestChild.setData(parentData);
-    		
-    		removeSubTreeRoot(smallestChild);
-		}
-		else {
-			BinaryHeapNode parent = (BinaryHeapNode) nodeToRemove.parent();
-			
-			// If we are the left child of our parent, switch the right child
-			// of our parent to the left to maintain a complete tree
-			if (parent.leftChild() == nodeToRemove && parent.rightChild() != null){
-				parent.setLeftChild((BTreeNode) parent.rightChild());
-			}
-			// Remove the node
-			parent.removeChildNode(nodeToRemove);
-		}
-		
-	}
-
 
 	public void createNewRoot(Point aLocation){
     	//create a new root for the tree    	
@@ -275,61 +255,160 @@ public class BinaryHeap extends BTree implements BTreeADT{
       return false;
     }
 
-    //Helper functions
+    //===================================================================================
+    // Heap Traversing functions
+    //===================================================================================
+    /*
+	 * Removes the root of a sub-tree and re-positions the 
+	 * sub-tree elements to meet the min-heap requirements.
+	 */
+	private void removeSubTreeRoot(BinaryHeapNode nodeToRemove) {
+		// Since the node is not a leaf, we have not done traversing this tree.
+		if (!nodeToRemove.isLeaf()){
+			
+			// Store parent data as it will be switched.
+			Data parentData = (Data) nodeToRemove.getData();
+			// Switch with the smallest child of the parent.
+    		BinaryHeapNode smallestChild = this.getSmallestChild(nodeToRemove);
+    		
+    		// Switch the parent's value with the child's value and vice-versa.
+    		nodeToRemove.setData(smallestChild.getData());		
+    		smallestChild.setData(parentData);
+    		
+    		// Continue traversing.
+    		removeSubTreeRoot(smallestChild);
+		}
+		else {
+			// We are done traversing, now we can remove the node after making sure
+			// the 'Complete Tree' requirement of a heap is not violated.
+			BinaryHeapNode parent = (BinaryHeapNode) nodeToRemove.parent();
+			
+			// Since the 'Complete Tree' requirement of a heap requires that there must 
+			// be at least a left child, we will move the parent's right node to the parent's left node
+			// if we leave the parent with no left child after removing
+			if (parent.leftChild() == nodeToRemove && parent.rightChild() != null){
+				// Change the right with left.
+				parent.setLeftChild((BinaryHeapNode) parent.rightChild());
+				parent.setRightChild(null);
+			}
+			// Finally remove the node from the tree.
+			parent.removeChildNode(nodeToRemove);
+		}
+		
+	}
+	
+	/*
+	 * Finds the new "lastNode" for a current left "lastNode".
+	 * 
+	 * 1. Traverses up until the Root Node or a Right Child Node is found
+	 * 2. If Root Node, traverses immediately to the Left Child Node.
+	 * 3. If Right Child Node, traverses immediately to the Parent Node's Left Child Node.
+	 * 4. Traverses down right until a Leaf Node is found. 
+	 */
+	private BinaryHeapNode traverseForLeftRemoval(BinaryHeapNode node){
+		BinaryHeapNode newLastNode = null;
+		BinaryHeapNode currentNode = (BinaryHeapNode) lastNode.parent();
+		String direction = "up";
+		
+		// Find the new last node by traversing the tree.
+		while (newLastNode == null){
+			// Exit condition
+			if (direction == "down" && currentNode.isLeaf()){
+				newLastNode = currentNode;
+				// Clear the direction so we don't move.
+				direction = "";
+			}
+			// Go up until a right child or the root is reached.
+			if (((BTreeNode) currentNode.parent()).rightChild() == currentNode || currentNode.isRoot()){
+				// We've hit a right child or the root is reached, change direction.
+				// Go to the left child.
+				direction = "left";
+			}
+			
+			if (direction == "up"){
+				// Go up
+				currentNode = (BinaryHeapNode) currentNode.parent();
+			}
+			else if (direction == "left"){
+				// Go left
+				currentNode = (BinaryHeapNode) ((BinaryHeapNode) currentNode.parent()).leftChild();
+				// Change direction immediately
+				// Go down right until a leaf is reached.
+				direction = "down";
+			}
+			else if (direction == "down"){
+				// Go down right
+				currentNode = (BinaryHeapNode) currentNode.rightChild();
+			}
+		}
+		
+		return newLastNode;
+	}
+	
+    //===================================================================================
+    // Utility/helper functions
+    //===================================================================================
+ 
+    /*
+     * Returns the smallest of the children of a passed parent node.
+     * 
+     * In the case of no children, the single child will be returned.
+     */
+	private BinaryHeapNode getSmallestChild(BinaryHeapNode parentNode) {
+		BinaryHeapNode leftChild = (BinaryHeapNode) parentNode.leftChild();
+		BinaryHeapNode rightChild = (BinaryHeapNode) parentNode.rightChild();
+		BinaryHeapNode smallestChild = null;
+		
+		// 1. Parent node has two children
+		if (rightChild != null && leftChild != null){
+			// Compare two children
+			int comparisonResult = rightChild.getData().compare(leftChild.getData());
+			if (comparisonResult < 0){
+				// < 0: The rightChild is smaller than the leftChild
+				smallestChild = rightChild;
+        	}
+	    	else if (comparisonResult >= 0){
+	    		// > 0: The rightChild is bigger than the leftChild
+	    		// = 0: The rightChild is equal to the leftChild
+	    		smallestChild = leftChild;
+	    	}
+		}
+		// 2. Parent node only has a right child
+		else if (rightChild != null){
+			smallestChild = rightChild;
+		}
+		// 3. Parent node only has a left child
+		else if (leftChild != null){
+			smallestChild = leftChild;
+		}
+		return smallestChild;
+	}
+	
     
-    // Function determines the new last node after a removal
-    // is about to happen
+	/*
+	 * Determines what the last node will be after a remove on a
+	 * Heap occurs.
+	 */
     private BinaryHeapNode getNewLastNode() {
     	BinaryHeapNode newLastNode = null;
-    	// Get type
+    	// Get type in order to figure out what action we should perform
+    	// in order to get to the new last node.
     	String type = lastNode.determineTypeForRemove();
     	
     	// Case 1: last node is currently a right child. 
 		if (type == "right"){
-			// New last node will be the left child of the current last node’s parent.
+			// New "lastNode" will be the left child of the current lastNode’s parent.
 			newLastNode = (BinaryHeapNode) ((BinaryHeapNode) lastNode.parent()).leftChild();
 		}
-		// Case 2: last node is currently a left most child. 
+		// Case 2: lastNode is currently a left most child. 
 		else if (type == "left-most"){
-		    // New last node will be the rightmost leaf node	
+		    // New lastNode will be the rightmost leaf node	
 			newLastNode = getRightmostLeafNode();
     	}
-		// Case 3: last node is currently a left child
+		// Case 3: lastNode is currently a left child
 		else if (type == "left"){
-    		BinaryHeapNode currentNode = (BinaryHeapNode) lastNode.parent();
-    		String direction = "up";
-			
-    		// Find the new last node by traversing the tree.
-			while (newLastNode == null){
-				// Exit condition
-				if (direction == "down" && currentNode.isLeaf()){
-					newLastNode = currentNode;
-					// Clear the direction so we don't move.
-					direction = "";
-				}
-				// Go up until a right child or the root is reached.
-				if (((BTreeNode) currentNode.parent()).rightChild() == currentNode || currentNode.isRoot()){
-					// We've hit a right child or the root is reached, change direction.
-					// Go to the left child.
-					direction = "left";
-				}
-				
-				if (direction == "up"){
-					// Go up
-					currentNode = (BinaryHeapNode) currentNode.parent();
-				}
-				else if (direction == "left"){
-					// Go left
-					currentNode = (BinaryHeapNode) ((BinaryHeapNode) currentNode.parent()).leftChild();
-					// Change direction immediately
-					// Go down right until a leaf is reached.
-					direction = "down";
-				}
-				else if (direction == "down"){
-					// Go down right
-					currentNode = (BinaryHeapNode) currentNode.rightChild();
-				}
-			}
+			// New lastNode will be a right leaf after traversing.
+			newLastNode = traverseForLeftRemoval(lastNode);
     	}
 		
 		return newLastNode;
@@ -464,8 +543,8 @@ public class BinaryHeap extends BTree implements BTreeADT{
      *
      *  
      */
-    private void restoreOrderDownheap(){
-    	BinaryHeapNode currentNode = (BinaryHeapNode) this.root();
+    private void restoreOrderDownheap(BinaryHeapNode root){
+    	BinaryHeapNode currentNode = root;
         BinaryHeapNode parentNode;
         Data parentData;
         
@@ -494,38 +573,5 @@ public class BinaryHeap extends BTree implements BTreeADT{
         	}
         }
     }
-
-    
-    // Function returns the smallest of the children of a node
-    // If the node only has one child, that child will be returned
-	private BinaryHeapNode getSmallestChild(BinaryHeapNode parentNode) {
-		BinaryHeapNode leftChild = (BinaryHeapNode) parentNode.leftChild();
-		BinaryHeapNode rightChild = (BinaryHeapNode) parentNode.rightChild();
-		BinaryHeapNode smallestChild = null;
-		
-		// 1. Node has two children
-		if (rightChild != null && leftChild != null){
-			// Compare two children
-			int comparisonResult = rightChild.getData().compare(leftChild.getData());
-			if (comparisonResult < 0){
-				// < 0: The rightChild is smaller than the leftChild
-				smallestChild = rightChild;
-        	}
-	    	else if (comparisonResult >= 0){
-	    		// > 0: The rightChild is bigger than the leftChild
-	    		// = 0: The rightChild is equal to the leftChild
-	    		smallestChild = leftChild;
-	    	}
-		}
-		// 2. Node only has a right child
-		else if (rightChild != null){
-			smallestChild = rightChild;
-		}
-		// 3. Node only has a left child
-		else if (leftChild != null){
-			smallestChild = leftChild;
-		}
-		return smallestChild;
-	}
 
 }
