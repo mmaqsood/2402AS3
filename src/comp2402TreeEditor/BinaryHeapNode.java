@@ -27,7 +27,6 @@ public class BinaryHeapNode extends BTreeNode implements BTreeNodeADT{
 	 *	- Right Most Child
 	 */
 	public String determineTypeForInsert(){
-		// TODO: Implement rightMost ability
 		BinaryHeapNode rightMostNode = null;
 		BinaryHeapNode parent = (BinaryHeapNode) this.parent();
 		
@@ -53,7 +52,6 @@ public class BinaryHeapNode extends BTreeNode implements BTreeNodeADT{
 	 *	- Right Most Child
 	 */
 	public String determineTypeForRemove(){
-		// TODO: Implement rightMost ability
 		BinaryHeapNode rightMostNode = null;
 		BinaryHeapNode parent = (BinaryHeapNode) this.parent();
 		
