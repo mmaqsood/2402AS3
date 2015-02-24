@@ -57,7 +57,7 @@ public class BinaryHeapNode extends BTreeNode implements BTreeNodeADT{
 		BinaryHeapNode rightMostNode = null;
 		BinaryHeapNode parent = (BinaryHeapNode) this.parent();
 		
-		if (parent.leftChild() == this){
+		if (parent != null && parent.leftChild() != null && parent.leftChild() == this){
 			if (this.isLeftmostNode()){
 				return "left-most";
 			}
@@ -65,10 +65,12 @@ public class BinaryHeapNode extends BTreeNode implements BTreeNodeADT{
 				return "left";
 			}
 		}
-		else if (parent.rightChild() == this){
+		else if (parent != null && parent.rightChild() != null && parent.rightChild() == this){
 			return "right";
 		}
-		return null;
+		else {
+			return "root";
+		}
 	}
 	
 	// Tells us if the node is the leftmost child in the tree

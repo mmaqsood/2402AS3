@@ -54,6 +54,9 @@ public class BinaryHeap extends BTree implements BTreeADT{
 
 
     //BTreeADT inteface methods =========================================================
+	 /*
+	  * Performs an insert in a Heap.
+	  */
      public void insert(String dataString){
     
        	/*A binary heap tree inserts nodes based on the key value such that for any internal
@@ -63,8 +66,6 @@ public class BinaryHeap extends BTree implements BTreeADT{
     	O(log(n)) //heap is at most O(log(n)) high for a heap of n nodes
    	    */
    	    
-    	
-   	    //System.out.println("BSTree::insert(String)");
     	Data data = new Data(dataString);
     	BinaryHeapNode nodeToAdd = new BinaryHeapNode(data);
 
@@ -93,7 +94,6 @@ public class BinaryHeap extends BTree implements BTreeADT{
     			
     		}
     		else if (type == "right-most"){
-    			
     			BinaryHeapNode currentNode = (BinaryHeapNode) lastNode.parent();
     			
     			// Find the node to insert left-under
@@ -135,43 +135,45 @@ public class BinaryHeap extends BTree implements BTreeADT{
     		// In case we have violated the order, restore.
     		restoreOrderUpheap();
     	}
-
-        // Once node is created to insert
-        // if node.parent.leftChild == null
-        //      rightMostChild = node;
     }
     
+    /*
+     * Remove function left as is, meets requirements.
+     */
     public void remove(String aKeyString){
     	
-    //Remove a node whose key value is aKeyString
-    //It will take O(n) to find the node to remove but from that point
-    //the removal  of the node will take O(log(n)) time
-    
-     
-    BinaryHeapNode nodeToRemove = null;	
-    
-    //O(N) to find a  node to remove
-    //Heaps are not designed for searching so this is an O(n)
-    //operation
-    for(TreeNodeADT t : this.nodes()){
-    	if(t.getData().key().equals(aKeyString)) {
-    		nodeToRemove = (BinaryHeapNode) t;
-    		break;
-    	}
-    	
-    }
-    if(nodeToRemove == null) return;
-    
-    //do a removal from the heap and maintain the heap property
-    //using the private method
-    removeNode(nodeToRemove);
+		//Remove a node whose key value is aKeyString
+		//It will take O(n) to find the node to remove but from that point
+		//the removal  of the node will take O(log(n)) time
+		BinaryHeapNode nodeToRemove = null;	
+		
+		//O(N) to find a  node to remove
+		//Heaps are not designed for searching so this is an O(n)
+		//operation
+		for(TreeNodeADT t : this.nodes()){
+			if(t.getData().key().equals(aKeyString)) {
+				nodeToRemove = (BinaryHeapNode) t;
+				break;
+			}
+			
+		}
+		if(nodeToRemove == null) return;
+		
+		//do a removal from the heap and maintain the heap property
+		//using the private method
+		removeNode(nodeToRemove);
     
     }
     
+    /* 
+     * Removes a node from the Heap.
+     */
     private void removeNode(BinaryHeapNode nodeToRemove){
-    	// Cases
-    	
-    	if (nodeToRemove.isRoot()){
+    	if (nodeToRemove.isRoot() && (nodeToRemove.rightChild() == null && nodeToRemove.leftChild() == null)){
+    		// Node is root and the only node left, simply remove it.
+    		this.setRoot(null);
+    	}
+    	else if (nodeToRemove.isRoot()){
     		// Node is the root
     		// 1. Identify new last node
     		BinaryHeapNode newLastNode = getNewLastNode();
@@ -185,22 +187,7 @@ public class BinaryHeap extends BTree implements BTreeADT{
     		this.restoreOrderDownheap((BinaryHeapNode) this.root());
     		System.out.println(lastNode.value());
     	}
-    	else if (nodeToRemove.isLeaf()){
-    		BinaryHeapNode newLastNode = null;
-    		if (nodeToRemove == lastNode){
-    			newLastNode = getNewLastNode();
-    		}
-    		// Node has no children
-    		nodeToRemove.getParent().removeChildNode(nodeToRemove);
-    		
-    		if (newLastNode != null){
-    			lastNode = newLastNode;
-    		}
-    		
-    		// Check for complete tree, switching right/left if need be
-    	}
     	else {
-    		// Node is the root
     		// 1. Identify new last node
     		BinaryHeapNode newLastNode = getNewLastNode();
     		// 2. Replace the root of this sub-tree's key with the key of the lastnode 
@@ -211,17 +198,7 @@ public class BinaryHeap extends BTree implements BTreeADT{
     		lastNode = newLastNode;
     		// 5. Restore heap order via downheap.
     		this.restoreOrderDownheap(nodeToRemove);
-    		System.out.println(lastNode.value());
     	}
-    	//remove the nodeToRemove from the heap and restore heap property
-    	//by bubbling bigger key values down.
-    	//The removal takes no more than O(log(n)) time
-    	
-    	
-    	//TO DO:
-    	//Implement Removal from a Heap, maintaining the Heap Property
-    	//Must be O(log(n)) at most for a heap of n nodes
- 
     }
     
     
@@ -410,6 +387,10 @@ public class BinaryHeap extends BTree implements BTreeADT{
 			// New lastNode will be a right leaf after traversing.
 			newLastNode = traverseForLeftRemoval(lastNode);
     	}
+		// Case 4: lastNode is the root, so delete it.
+		else {
+			newLastNode = (BinaryHeapNode) this.root();
+		}
 		
 		return newLastNode;
 	}
@@ -425,7 +406,7 @@ public class BinaryHeap extends BTree implements BTreeADT{
 		String direction = "up";
 		while (rightmostNode == null){
 			// Exit condition
-			if (direction == "down" && currentNode.isLeaf()){
+			if (direction == "down" && (currentNode.isLeaf() || currentNode.isRoot())){
 				rightmostNode = currentNode;
 			}
 			// Switching direction from "up" to "right" once we hit either a right child or the root.
@@ -444,13 +425,17 @@ public class BinaryHeap extends BTree implements BTreeADT{
 				currentNode = (BinaryHeapNode) currentNode.parent();
 			}
 			else if (direction == "right"){
-				// Move immediately to the right child
-				currentNode = (BinaryHeapNode) currentNode.rightChild();
+				if (currentNode.rightChild() != null){
+					// Move immediately to the right child
+					currentNode = (BinaryHeapNode) currentNode.rightChild();
+				}
 				// Switch direction, moving downwards
 				direction = "down";
 			}
 			else if (direction == "down"){
-				currentNode = (BinaryHeapNode) currentNode.rightChild();
+				if (currentNode.rightChild() != null){
+					currentNode = (BinaryHeapNode) currentNode.rightChild();
+				}
 			}
 		}
 		return rightmostNode;
@@ -540,8 +525,6 @@ public class BinaryHeap extends BTree implements BTreeADT{
     }
     /*
      *  Function restores the order of a Heap via Downheap.
-     *
-     *  
      */
     private void restoreOrderDownheap(BinaryHeapNode root){
     	BinaryHeapNode currentNode = root;
