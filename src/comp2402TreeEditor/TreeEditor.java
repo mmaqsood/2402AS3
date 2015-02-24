@@ -26,7 +26,7 @@ public class TreeEditor extends JPanel implements MouseListener, ActionListener,
 
 	// Keep the model (i.e. the graph)
     private Tree tree;
-    public static boolean displayNodeLabels =false; 
+    public static boolean displayNodeLabels =true; 
     public static boolean displayDataValues =false; 
     
     public static boolean useEdgeWeights =false; //use edge weights instead of graphica length with true
