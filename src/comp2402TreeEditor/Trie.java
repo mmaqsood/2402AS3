@@ -200,9 +200,14 @@ public class Trie extends Tree{
 				// Add the word.
 				this.addWord(lastNode, word.substring(letterIndex), word);
 			}
-			else if (root == lastNode){
+			// Handle single characters
+			else if (root == lastNode && word.length() == 1){
 				// Mark the root
 				root.setNodeLabel(word);
+			}
+			else if (root == lastNode){
+				// Add to the root
+				this.addWord(root, word.substring(1), word);
 			}
 			else {
 				// Mark if there is something to mark.
