@@ -51,11 +51,13 @@ public class Trie extends Tree{
 	 * 			Work + other subjects/tests occupied more of my time. Thanks.
 	 */
 	public void remove(String word){
-		// Find the root of the node
-		TrieNode currentNode = this.findWordTraversely(word, false);
-		
-		// Remove the child.
-		((TrieNode) currentNode.parent()).removeChildNode(currentNode);
+		if (this.root() != null && this.root().children().size() > 0){
+			// Find the root of the node
+			TrieNode currentNode = this.findWordTraversely(word, false);
+			
+			// Remove the child.
+			((TrieNode) currentNode.parent()).removeChildNode(currentNode);
+		}
 	}
 	 
 	/*
