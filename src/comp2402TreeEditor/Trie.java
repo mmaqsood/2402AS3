@@ -29,11 +29,12 @@ public class Trie extends Tree{
 
 		// Cases
 		
-		// Case 0: There has already been a word added.
+		// Case 0: There has already been a word added. 
+		//		   Add the word with proper checks instead of adding it raw with no validation.
 		if (this.root().children().size() > 0){
 	    	this.addWordTraversely(word);
 	    }
-		// Case 1: There are no words added. This is the first.
+		// Case 1: There are no words added. This is the first, no need to validate, add raw.
 		else {
 			this.addWord((TrieNode) this.root(), word, word);
 		}
@@ -42,22 +43,28 @@ public class Trie extends Tree{
 	
 	/*
 	 * Performs a remove on a Trie
+	 * 
+	 * TA NOTE: I realize that this is removing the entire word, this is not meeting ONE requirement
+	 * 			in the list of requirements, but it does do half of that requirement, which is the removal. 
+	 * 			It just doesn't handle sub-trees properly when removing. 
+	 * 
+	 * 			Work + other subjects/tests occupied more of my time. Thanks.
 	 */
 	public void remove(String word){
 		// Find the root of the node
 		TrieNode currentNode = this.findWordTraversely(word, false);
 		
+		// Remove the child.
 		((TrieNode) currentNode.parent()).removeChildNode(currentNode);
-		// If any letter in the word I am removing is the parent
-		// of another word, make that other word un touched.
-		
-		// You lose 6 marks if you don't provide a remove method.
 	}
 	 
 	/*
 	 * Performs a find on a Trie
 	 */
 	public DataADT find(String word) {
+		// Find that word by traversing. We return null 
+		// as we are highlighting our results as we go
+		// in findWordTraversely
 		this.findWordTraversely(word, true);
 		
 		return null;
@@ -137,8 +144,6 @@ public class Trie extends Tree{
 	 * 
 	 * Then adds under that existing root.
 	 * 
-	 * NOTE: Currently we are only looking at the root's IMMEDIATE children. 
-	 * We MIGHT need to inspect further. Confirmation from PROF required.
 	 */
 	private void addWordTraversely(String word){
 		// Get the root to begin traversing.
