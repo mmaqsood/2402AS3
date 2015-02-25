@@ -15,7 +15,7 @@ public class Trie extends Tree{
 	public Trie(){
 	}
 	
-	
+	 
 	
 	/*
 	 * Performs an insert of a Trie.
