@@ -15,17 +15,19 @@ public class Trie extends Tree{
 	public Trie(){
 	}
 	
+	
+	
 	/*
 	 * Performs an insert of a Trie.
 	 */
 	public void insert(String word){
-	    // Cases
-		
-		// Initialize the root if it hasn't e
+	    // Initialize the root if it hasn't been
 		if (this.root() == null){
 			// A Trie has a Root with no value (or Key in the DataADT case).
 			setRoot(new TrieNode(new Data(" ")));
 		}
+
+		// Cases
 		
 		// Case 0: There has already been a word added.
 		if (this.root().children().size() > 0){
@@ -33,15 +35,103 @@ public class Trie extends Tree{
 	    }
 		// Case 1: There are no words added. This is the first.
 		else {
-			this.addWord((TrieNode) this.root(), word);
+			this.addWord((TrieNode) this.root(), word, word);
 		}
 	
 	}
+	
+	/*
+	 * Performs a remove on a Trie
+	 */
+	public void remove(String word){
+		// Find the root of the node
+		TrieNode currentNode = this.findWordTraversely(word, false);
+		
+		((TrieNode) currentNode.parent()).removeChildNode(currentNode);
+		// If any letter in the word I am removing is the parent
+		// of another word, make that other word un touched.
+		
+		// You lose 6 marks if you don't provide a remove method.
+	}
 	 
+	/*
+	 * Performs a find on a Trie
+	 */
+	public DataADT find(String word) {
+		this.findWordTraversely(word, true);
+		
+		return null;
+    }   
 	
 	//===================================================================================
     // Traversal Functions
     //===================================================================================
+	
+	/*
+	 * Investigates the root in order to determine if a word is in the tree.
+	 */
+	private TrieNode findWordTraversely(String word, boolean highlightNodes) {
+		// Clear selections.
+		this.clearSelections();
+		
+		// Get the root to begin traversing.
+		TrieNode root = getLetterRoot(String.valueOf(word.charAt(0)));
+		
+		// Tells us if we found a complete word
+		String lettersFound = "";
+		
+		// Case 0: Found the sub-tree to traverse
+		if (root != this.root()){
+			// Traverse and mark as red
+			// Index to letters in our word
+			int letterIndex = 0;
+			
+			// Starting off our iteration with this node.
+			TrieNode currentNode = root;
+			
+			// Keep going 
+			while (currentNode != null){
+				// Current letter we are looking at of our word.
+				String letter = "";
+				
+				if (!(letterIndex >= word.length())){
+					// Update value
+					letter = String.valueOf(word.charAt(letterIndex));
+				}
+				
+				// Compare
+				if (currentNode.getData().key().equals(letter)){
+					if (currentNode.isSelected() == false && highlightNodes == true){
+						currentNode.toggleSelected();
+					}
+					lettersFound += letter;
+					letterIndex++;
+				}
+				else {
+					if (currentNode.isSelected() ){
+						currentNode.toggleSelected();
+					}
+				}
+				
+				// Move along
+				currentNode = currentNode.getChildNode();
+			}
+			
+			// Returns the head of the node if we found the word
+			if (lettersFound.equals(word)){
+				return root;
+			}
+		}
+		// Case 1: Did not find the subtree that has the first letter of the word
+		else {
+			if (root == null){
+				// Return as no point in inspecting further.
+				return null;
+			}
+		}
+		return null;
+    }   
+	
 	/*
 	 * Investigates the root's children if the beginning letter has already been added.
 	 * 
@@ -54,50 +144,68 @@ public class Trie extends Tree{
 		// Get the root to begin traversing.
 		TrieNode root = getLetterRoot(String.valueOf(word.charAt(0)));
 		
-		// Index to letters in our word
-		int letterIndex = 1;
-		
-		// Starting off our iteration with this node.
-		TrieNode currentNode = root.getChildNode();
-		
-		// Help with logic, remove later, merge with currentNode
-		TrieNode lastNode = root;
-		
-		// In the case that our word is a small portion of a word already, flag it
-		// since we need to mark it with a label
-		TrieNode markNode = null;
-		
-		// Keep going 
-		while (currentNode != null){
-			// Current letter we are looking at of our word.
-			String letter = String.valueOf(word.charAt(letterIndex));
-			// Compare
-			if (currentNode.getData().key().equals(letter)){
-				lastNode = currentNode;
-				letterIndex++;
+		// Only traverse down a sub-tree if we have found a sub tree
+		if (root != this.root()){
+			// Index to letters in our word
+			int letterIndex;
+			
+			// Determine index based on length
+			if (word.length() == 1){
+				letterIndex = 0;
+			}
+			else {
+				letterIndex = 1;
 			}
 			
-			// Check if we have run out of letters to go over.
-			// If we have, this mean that our word is a small portion of a word
-			// already in the tree, so flag it so that it can be marked later on.
-			if (letterIndex >= word.length()){
-				markNode = currentNode;
-				currentNode = null;
+			// Starting off our iteration with this node.
+			TrieNode currentNode = root.getChildNode();
+			
+			// Help with logic, remove later, merge with currentNode
+			TrieNode lastNode = root;
+			
+			// In the case that our word is a small portion of a word already, flag it
+			// since we need to mark it with a label
+			TrieNode markNode = null;
+			
+			// Keep going 
+			while (currentNode != null){
+				// Current letter we are looking at of our word.
+				String letter = String.valueOf(word.charAt(letterIndex));
+				// Compare
+				if (currentNode.getData().key().equals(letter)){
+					lastNode = currentNode;
+					letterIndex++;
+				}
+				
+				// Check if we have run out of letters to go over.
+				// If we have, this mean that our word is a small portion of a word
+				// already in the tree, so flag it so that it can be marked later on.
+				if (letterIndex >= word.length()){
+					markNode = currentNode;
+					currentNode = null;
+				}
+				else{
+					// Move along
+					currentNode = currentNode.getChildNode();
+				}
 			}
-			else{
-				// Move along
-				currentNode = currentNode.getChildNode();
+			
+			// Add the word if there is nothing to mark.
+			if (markNode == null && root != lastNode){
+				// Add the word.
+				this.addWord(lastNode, word.substring(letterIndex), word);
 			}
-		}
-		
-		// Add the word if there is nothing to mark.
-		if (markNode == null){
-			// Add the word.
-			this.addWord(lastNode, word);
+			else if (root == lastNode){
+				// Mark the root
+				root.setNodeLabel(word);
+			}
+			else {
+				// Mark if there is something to mark.
+				markNode.setNodeLabel(word);
+			}
 		}
 		else {
-			// Mark if there is something to mark.
-			markNode.setNodeLabel(word);
+			this.addWord((TrieNode) this.root(), word, word);
 		}
 	}
 	
@@ -134,7 +242,7 @@ public class Trie extends Tree{
 	 * 
 	 * I.E 'apple' becomes 'a->p->p->l->e'
 	 */
-	private void addWord(TrieNode root, String word){
+	private void addWord(TrieNode root, String word, String label){
 		// This variable changes to whatever the last added node is 
 		// in the iteration in order to properly add nested children.
 		TrieNode currentParent = root;
@@ -151,7 +259,7 @@ public class Trie extends Tree{
 			// Update our track-variable
 			currentParent = newNode;
 		}
-		currentParent.setNodeLabel(word);
+		currentParent.setNodeLabel(label);
 	}
 	
 	//===================================================================================
