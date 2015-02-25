@@ -202,6 +202,7 @@ public class Trie extends Tree{
 			else {
 				// Mark if there is something to mark.
 				markNode.setNodeLabel(word);
+				markNode.setDrawAsCircle(false);
 			}
 		}
 		else {
@@ -260,6 +261,7 @@ public class Trie extends Tree{
 			currentParent = newNode;
 		}
 		currentParent.setNodeLabel(label);
+		currentParent.setDrawAsCircle(false);
 	}
 	
 	//===================================================================================
