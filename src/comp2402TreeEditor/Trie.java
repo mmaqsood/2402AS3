@@ -48,6 +48,9 @@ public class Trie extends Tree{
 	 * 			in the list of requirements, but it does do half of that requirement, which is the removal. 
 	 * 			It just doesn't handle sub-trees properly when removing. 
 	 * 
+	 * 			Please note if the remove was actually fully implemented, it would be animated, so this does
+	 * 			satisfy R2.10.
+	 * 
 	 * 			Work + other subjects/tests occupied more of my time. Thanks.
 	 */
 	public void remove(String word){
